@@ -25,7 +25,7 @@ writes a root-cause summary.
 ### Phase 1 — E-commerce services skeleton
 Deliverables: shared library, three FastAPI services with business logic, Kafka wiring, Dockerfile, docker-compose for the app + Kafka.
 Files:
-- `services/shopcommon/{__init__,config,db,faults,kafka}.py`, `services/shopcommon/pyproject.toml`
+- `services/shopcommon/{__init__,config,db,faults,kafka}.py` (imported via PYTHONPATH, no separate packaging)
 - `services/catalog/app.py`, `services/checkout/app.py`, `services/orders/app.py`
 - `services/Dockerfile`, `services/requirements.txt`
 - `docker-compose.yml`, `.env.example`
