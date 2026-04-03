@@ -6,6 +6,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from shopcommon.config import get_settings
@@ -79,8 +80,6 @@ app.include_router(admin_router(faults))
 
 @app.exception_handler(InjectedFault)
 async def _fault_handler(_, exc: InjectedFault):
-    from fastapi.responses import JSONResponse
-
     log.error("request failed: %s", exc)
     return JSONResponse(status_code=503, content={"detail": str(exc), "fault_point": exc.point})
 
