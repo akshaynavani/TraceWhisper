@@ -1,22 +1,47 @@
-"""JSON event producer/consumer on top of aiokafka."""
+"""JSON event producer/consumer on top of aiokafka, with trace propagation.
+
+The producer injects W3C ``traceparent``/``tracestate`` into Kafka record
+headers; the consumer extracts them so the processing span becomes a child of
+the publishing span. That single detail is what lets a checkout trace continue
+into the asynchronous orders service.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
+import time
 from typing import Any, Awaitable, Callable
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from aiokafka.structs import ConsumerRecord
+from opentelemetry import propagate, trace
+from opentelemetry.trace import SpanKind
+
+from .metrics import KAFKA_MESSAGES, KAFKA_PROCESS_LATENCY
+from .telemetry import mark_error
 
 log = logging.getLogger(__name__)
+_tracer = trace.get_tracer("tracewhisper.shop.kafka")
 
 Handler = Callable[[dict[str, Any], ConsumerRecord], Awaitable[None]]
 
 
+def _inject_headers() -> list[tuple[str, bytes]]:
+    carrier: dict[str, str] = {}
+    propagate.inject(carrier)
+    return [(k, v.encode()) for k, v in carrier.items()]
+
+
+def _extract_context(headers: list[tuple[str, bytes]] | None):
+    carrier = {k: v.decode() for k, v in (headers or []) if v is not None}
+    return propagate.extract(carrier)
+
+
 class EventProducer:
     def __init__(self, bootstrap: str, client_id: str):
+        self.client_id = client_id
         self._producer = AIOKafkaProducer(
             bootstrap_servers=bootstrap,
             client_id=client_id,
@@ -33,13 +58,34 @@ class EventProducer:
         await self._producer.stop()
 
     async def publish(self, topic: str, key: str | None, value: dict[str, Any]) -> None:
-        headers: list[tuple[str, bytes]] = []
-        await self._producer.send_and_wait(topic, value=value, key=key, headers=headers)
+        with _tracer.start_as_current_span(
+            f"{topic} publish",
+            kind=SpanKind.PRODUCER,
+            attributes={
+                "messaging.system": "kafka",
+                "messaging.destination.name": topic,
+                "messaging.operation": "publish",
+                "messaging.kafka.message.key": key or "",
+                "messaging.client_id": self.client_id,
+            },
+        ) as span:
+            try:
+                metadata = await self._producer.send_and_wait(
+                    topic, value=value, key=key, headers=_inject_headers()
+                )
+                span.set_attribute("messaging.kafka.destination.partition", metadata.partition)
+                span.set_attribute("messaging.kafka.message.offset", metadata.offset)
+                KAFKA_MESSAGES.labels(self.client_id, topic, "out", "ok").inc()
+            except Exception as exc:
+                mark_error(span, exc)
+                KAFKA_MESSAGES.labels(self.client_id, topic, "out", "error").inc()
+                raise
 
 
 class EventConsumer:
     def __init__(self, bootstrap: str, topic: str, group_id: str, handler: Handler):
         self.topic = topic
+        self.group_id = group_id
         self._handler = handler
         self._consumer = AIOKafkaConsumer(
             topic,
@@ -66,11 +112,36 @@ class EventConsumer:
 
     async def _loop(self) -> None:
         async for record in self._consumer:
+            await self._process(record)
+            await self._consumer.commit()
+
+    async def _process(self, record: ConsumerRecord) -> None:
+        parent = _extract_context(record.headers)
+        queue_ms = max(0, int(time.time() * 1000) - record.timestamp)
+        with _tracer.start_as_current_span(
+            f"{record.topic} process",
+            context=parent,
+            kind=SpanKind.CONSUMER,
+            attributes={
+                "messaging.system": "kafka",
+                "messaging.destination.name": record.topic,
+                "messaging.operation": "process",
+                "messaging.kafka.consumer.group": self.group_id,
+                "messaging.kafka.destination.partition": record.partition,
+                "messaging.kafka.message.offset": record.offset,
+                "messaging.kafka.queue_time_ms": queue_ms,
+            },
+        ) as span:
+            start = time.perf_counter()
             try:
                 await self._handler(record.value, record)
-            except Exception:  # handler decides on DLQ; never kill the loop
+                KAFKA_MESSAGES.labels(self.group_id, record.topic, "in", "ok").inc()
+            except Exception as exc:  # handler decides on DLQ; never kill the loop
+                mark_error(span, exc)
+                KAFKA_MESSAGES.labels(self.group_id, record.topic, "in", "error").inc()
                 log.exception("unhandled error processing %s@%s", record.topic, record.offset)
-            await self._consumer.commit()
+            finally:
+                KAFKA_PROCESS_LATENCY.labels(self.group_id, record.topic).observe(time.perf_counter() - start)
 
 
 async def _retry(start: Callable[[], Awaitable[None]], what: str, attempts: int = 30) -> None:

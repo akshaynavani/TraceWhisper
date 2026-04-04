@@ -55,8 +55,9 @@ class Database:
             try:
                 if self.faults:
                     self.faults.apply_sync(f"{self.service}.db.{op}")
+                lock_start = time.perf_counter()
                 with self._lock:
-                    lock_wait = time.perf_counter() - start
+                    lock_wait = time.perf_counter() - lock_start
                     span.set_attribute("db.lock_wait_ms", round(lock_wait * 1000, 2))
                     if many:
                         cur = self._conn.executemany(sql, params)
