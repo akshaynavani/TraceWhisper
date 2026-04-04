@@ -11,9 +11,17 @@ import asyncio
 import os
 import sqlite3
 import threading
+import time
 from typing import Any, Iterable
 
+from opentelemetry import trace
+from opentelemetry.trace import SpanKind
+
 from .faults import FaultInjector
+from .metrics import DB_LATENCY
+from .telemetry import mark_error
+
+_tracer = trace.get_tracer("tracewhisper.shop.db")
 
 
 class Database:
@@ -30,12 +38,38 @@ class Database:
         self._conn.execute("PRAGMA journal_mode=WAL")
 
     def _run(self, op: str, sql: str, params: Iterable[Any], many: bool) -> list[dict]:
-        if self.faults:
-            self.faults.apply_sync(f"{self.service}.db.{op}")
-        with self._lock:
-            cur = self._conn.executemany(sql, params) if many else self._conn.execute(sql, tuple(params))
-            rows = cur.fetchall() if cur.description else []
-            return [dict(r) for r in rows]
+        # asyncio.to_thread copies contextvars, so this span parents correctly
+        # under the request span that awaited us.
+        statement = " ".join(sql.split())
+        with _tracer.start_as_current_span(
+            f"sqlite {op}",
+            kind=SpanKind.CLIENT,
+            attributes={
+                "db.system": "sqlite",
+                "db.name": os.path.basename(self.path),
+                "db.operation": statement.split(" ", 1)[0].upper(),
+                "db.statement": statement[:500],
+            },
+        ) as span:
+            start = time.perf_counter()
+            try:
+                if self.faults:
+                    self.faults.apply_sync(f"{self.service}.db.{op}")
+                with self._lock:
+                    lock_wait = time.perf_counter() - start
+                    span.set_attribute("db.lock_wait_ms", round(lock_wait * 1000, 2))
+                    if many:
+                        cur = self._conn.executemany(sql, params)
+                    else:
+                        cur = self._conn.execute(sql, tuple(params))
+                    rows = cur.fetchall() if cur.description else []
+                    span.set_attribute("db.rows", len(rows) if rows else max(cur.rowcount, 0))
+                    return [dict(r) for r in rows]
+            except Exception as exc:
+                mark_error(span, exc)
+                raise
+            finally:
+                DB_LATENCY.labels(self.service, op).observe(time.perf_counter() - start)
 
     async def query(self, sql: str, params: Iterable[Any] = (), op: str = "query") -> list[dict]:
         return await asyncio.to_thread(self._run, op, sql, params, False)
