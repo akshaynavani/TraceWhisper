@@ -59,6 +59,16 @@ def setup_tracing(settings: Settings) -> None:
 
 def instrument_app(app: FastAPI, settings: Settings) -> None:
     setup_tracing(settings)
+
+    @app.middleware("http")
+    async def _trace_header(request, call_next):
+        response = await call_next(request)
+        trace_id = current_trace_id()
+        if trace_id:
+            # Lets clients (and the load generator) hand a trace id straight to TraceWhisper.
+            response.headers["X-Trace-Id"] = trace_id
+        return response
+
     FastAPIInstrumentor.instrument_app(app, excluded_urls="healthz,metrics")
 
 

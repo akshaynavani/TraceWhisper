@@ -10,14 +10,18 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from opentelemetry import trace
+from opentelemetry.trace import SpanKind
 from pydantic import BaseModel, Field
 
 from shopcommon.config import get_settings
 from shopcommon.db import Database
 from shopcommon.faults import FaultInjector, InjectedFault, admin_router
+from shopcommon.metrics import BUSINESS_EVENTS, install_metrics
+from shopcommon.telemetry import get_tracer, instrument_app, mark_error
 from shopcommon.kafka import EventProducer
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+tracer = get_tracer()
 log = logging.getLogger("checkout")
 
 settings = get_settings()
@@ -72,11 +76,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="checkout", lifespan=lifespan)
+instrument_app(app, settings)
+install_metrics(app, settings.service_name)
 app.include_router(admin_router(faults))
 
 
 @app.exception_handler(InjectedFault)
 async def _fault_handler(_, exc: InjectedFault):
+    mark_error(None, exc, **{"fault.point": exc.point})
     log.error("request failed: %s", exc)
     return JSONResponse(status_code=503, content={"detail": str(exc), "fault_point": exc.point})
 
@@ -126,17 +133,40 @@ async def release_inventory(order_id: str) -> None:
 
 async def charge_payment(order_id: str, payment: Payment, amount_cents: int) -> str:
     """Simulated payment gateway. Card tokens starting with 'decline' are rejected."""
-    await faults.apply("checkout.payment")
-    await asyncio.sleep(0.04)  # typical gateway round trip
-    if payment.card_token.startswith("decline"):
-        raise PaymentDeclined("card declined by issuer")
-    return f"ch_{uuid.uuid4().hex[:16]}"
+    with tracer.start_as_current_span(
+        "payment-gateway charge",
+        kind=SpanKind.CLIENT,
+        attributes={
+            "peer.service": "payment-gateway",
+            "payment.amount_cents": amount_cents,
+            "payment.card_token_prefix": payment.card_token[:4],
+            "order.id": order_id,
+        },
+    ) as span:
+        try:
+            await faults.apply("checkout.payment")
+            await asyncio.sleep(0.04)  # typical gateway round trip
+            if payment.card_token.startswith("decline"):
+                raise PaymentDeclined("card declined by issuer")
+        except Exception as exc:
+            mark_error(span, exc, **{"payment.outcome": type(exc).__name__})
+            raise
+        charge_id = f"ch_{uuid.uuid4().hex[:16]}"
+        span.set_attribute("payment.charge_id", charge_id)
+        return charge_id
 
 
 @app.post("/checkout", status_code=201)
 async def checkout(req: CheckoutRequest) -> dict:
     order_id = f"ord_{uuid.uuid4().hex[:12]}"
-    lines, total = await price_cart(req.items)
+    span = trace.get_current_span()
+    span.set_attribute("order.id", order_id)
+    span.set_attribute("customer.id", req.customer_id)
+    span.set_attribute("cart.items", len(req.items))
+
+    with tracer.start_as_current_span("price cart"):
+        lines, total = await price_cart(req.items)
+    span.set_attribute("order.total_cents", total)
 
     await db.execute(
         "INSERT INTO checkouts (order_id, customer_id, total_cents, status) VALUES (?, ?, ?, 'pending')",
@@ -147,6 +177,7 @@ async def checkout(req: CheckoutRequest) -> dict:
         await reserve_inventory(order_id, req.items)
     except (httpx.HTTPError, HTTPException) as exc:
         await _mark(order_id, "failed", f"reservation: {exc}")
+        BUSINESS_EVENTS.labels(settings.service_name, "reservation_failed").inc()
         if isinstance(exc, HTTPException):
             raise
         raise HTTPException(status_code=502, detail="catalog unavailable") from exc
@@ -156,6 +187,7 @@ async def checkout(req: CheckoutRequest) -> dict:
     except (PaymentDeclined, InjectedFault) as exc:
         await release_inventory(order_id)
         await _mark(order_id, "failed", f"payment: {exc}")
+        BUSINESS_EVENTS.labels(settings.service_name, "payment_failed").inc()
         status = 402 if isinstance(exc, PaymentDeclined) else 502
         raise HTTPException(status_code=status, detail=f"payment failed: {exc}") from exc
 
@@ -169,6 +201,7 @@ async def checkout(req: CheckoutRequest) -> dict:
     await faults.apply("checkout.publish")
     await producer.publish(settings.orders_topic, key=order_id, value=event)
     await _mark(order_id, "completed", None)
+    BUSINESS_EVENTS.labels(settings.service_name, "checkout_completed").inc()
     return {"order_id": order_id, "total_cents": total, "charge_id": charge_id, "status": "accepted"}
 
 

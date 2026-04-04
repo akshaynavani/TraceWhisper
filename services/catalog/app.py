@@ -12,8 +12,10 @@ from pydantic import BaseModel, Field
 from shopcommon.config import get_settings
 from shopcommon.db import Database
 from shopcommon.faults import FaultInjector, InjectedFault, admin_router
+from shopcommon.metrics import BUSINESS_EVENTS, install_metrics
+from shopcommon.telemetry import get_tracer, instrument_app, mark_error
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+tracer = get_tracer()
 log = logging.getLogger("catalog")
 
 settings = get_settings()
@@ -75,11 +77,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="catalog", lifespan=lifespan)
+instrument_app(app, settings)
+install_metrics(app, settings.service_name)
 app.include_router(admin_router(faults))
 
 
 @app.exception_handler(InjectedFault)
 async def _fault_handler(_, exc: InjectedFault):
+    mark_error(None, exc, **{"fault.point": exc.point})
     log.error("request failed: %s", exc)
     return JSONResponse(status_code=503, content={"detail": str(exc), "fault_point": exc.point})
 
@@ -119,6 +124,7 @@ async def reserve(req: ReserveRequest) -> dict:
         if stock.get(i.sku, 0) < i.qty
     ]
     if shortages:
+        BUSINESS_EVENTS.labels(settings.service_name, "stock_shortage").inc()
         raise HTTPException(status_code=409, detail={"error": "insufficient_stock", "items": shortages})
 
     for item in req.items:

@@ -14,9 +14,11 @@ from fastapi.responses import JSONResponse
 from shopcommon.config import get_settings
 from shopcommon.db import Database
 from shopcommon.faults import FaultInjector, InjectedFault, admin_router
+from shopcommon.metrics import BUSINESS_EVENTS, install_metrics
+from shopcommon.telemetry import get_tracer, instrument_app, mark_error
 from shopcommon.kafka import EventConsumer, EventProducer
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+tracer = get_tracer()
 log = logging.getLogger("orders")
 
 settings = get_settings()
@@ -60,7 +62,15 @@ async def handle_order_placed(event: dict, record: ConsumerRecord) -> None:
     last_error: Exception | None = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            await persist_order(event)
+            with tracer.start_as_current_span(
+                "persist order", attributes={"order.id": event.get("order_id", ""), "retry.attempt": attempt}
+            ) as span:
+                try:
+                    await persist_order(event)
+                except Exception as exc:
+                    mark_error(span, exc)
+                    raise
+            BUSINESS_EVENTS.labels(settings.service_name, "order_confirmed").inc()
             log.info("order %s stored (offset %s)", event.get("order_id"), record.offset)
             return
         except Exception as exc:  # injected faults, malformed events, sqlite errors
@@ -73,6 +83,7 @@ async def handle_order_placed(event: dict, record: ConsumerRecord) -> None:
         key=event.get("order_id"),
         value={"event": event, "error": str(last_error), "source_offset": record.offset},
     )
+    BUSINESS_EVENTS.labels(settings.service_name, "order_dead_lettered").inc()
     log.error("order %s sent to DLQ: %s", event.get("order_id"), last_error)
     raise RuntimeError(f"order {event.get('order_id')} dead-lettered: {last_error}")
 
@@ -94,11 +105,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="orders", lifespan=lifespan)
+instrument_app(app, settings)
+install_metrics(app, settings.service_name)
 app.include_router(admin_router(faults))
 
 
 @app.exception_handler(InjectedFault)
 async def _fault_handler(_, exc: InjectedFault):
+    mark_error(None, exc, **{"fault.point": exc.point})
     log.error("request failed: %s", exc)
     return JSONResponse(status_code=503, content={"detail": str(exc), "fault_point": exc.point})
 
