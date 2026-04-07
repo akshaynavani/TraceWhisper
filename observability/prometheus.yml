@@ -3,15 +3,12 @@ global:
   evaluation_interval: 10s
 
 scrape_configs:
+  # Service metrics already carry a `service` label, so no target labels here
+  # (they would collide and be renamed to exported_service).
   - job_name: shop-services
     metrics_path: /metrics
     static_configs:
-      - targets: ["catalog:8000"]
-        labels: { service: catalog }
-      - targets: ["checkout:8000"]
-        labels: { service: checkout }
-      - targets: ["orders:8000"]
-        labels: { service: orders }
+      - targets: ["catalog:8000", "checkout:8000", "orders:8000"]
 
   - job_name: otel-spanmetrics
     static_configs:
