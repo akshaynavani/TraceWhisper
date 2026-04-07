@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tracewhisper"
+version = "0.1.0"
+description = "LLM-assisted root-cause analysis over OpenTelemetry traces (Jaeger) and Prometheus metrics, exposed via MCP"
+readme = "../README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.27",
+  "pydantic>=2.7",
+  "mcp>=1.2",
+  "anthropic>=0.75",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "respx>=0.21"]
+
+[project.scripts]
+tracewhisper = "tracewhisper.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
