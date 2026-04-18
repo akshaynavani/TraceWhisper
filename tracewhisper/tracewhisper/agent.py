@@ -119,6 +119,10 @@ class RootCauseAgent:
                 notify(text)
 
             tool_uses = [b for b in response.content if b.type == "tool_use"]
+            if response.stop_reason == "max_tokens" and tool_uses:
+                # The last tool_use may be truncated; don't execute half-formed input.
+                inv.stopped_because = "max_tokens"
+                return inv
             if not tool_uses:
                 inv.stopped_because = response.stop_reason or "end_turn"
                 return inv
@@ -130,11 +134,6 @@ class RootCauseAgent:
             if inv.report is not None:
                 inv.stopped_because = "report_submitted"
                 return inv
-
-            if response.stop_reason == "max_tokens":
-                messages.append(
-                    {"role": "user", "content": "You hit the output limit; continue concisely."}
-                )
 
         inv.stopped_because = "turn_budget_exhausted"
         return inv
