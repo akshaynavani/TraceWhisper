@@ -40,13 +40,13 @@ def random_cart(rng: random.Random) -> dict:
     }
 
 
-async def one_request(client: httpx.AsyncClient, base: str, rng: random.Random, stats: Stats, slow_ms: float):
+async def one_request(client: httpx.AsyncClient, base: str, catalog: str, rng: random.Random, stats: Stats, slow_ms: float):
     start = time.perf_counter()
     try:
         if rng.random() < 0.8:
             resp = await client.post(f"{base}/checkout", json=random_cart(rng))
         else:
-            resp = await client.get(f"{base.replace('8002', '8001')}/products/{rng.choice(SKUS)}")
+            resp = await client.get(f"{catalog}/products/{rng.choice(SKUS)}")
         status = resp.status_code
         trace_id = resp.headers.get("x-trace-id", "")
     except httpx.HTTPError as exc:
@@ -61,7 +61,7 @@ async def one_request(client: httpx.AsyncClient, base: str, rng: random.Random, 
         stats.slow_traces.append((elapsed, trace_id))
 
 
-async def run(base: str, rps: float, duration: float, seed: int | None, slow_ms: float) -> Stats:
+async def run(base: str, catalog: str, rps: float, duration: float, seed: int | None, slow_ms: float) -> Stats:
     rng = random.Random(seed)
     stats = Stats()
     interval = 1.0 / rps
@@ -69,7 +69,7 @@ async def run(base: str, rps: float, duration: float, seed: int | None, slow_ms:
     async with httpx.AsyncClient(timeout=10.0) as client:
         tasks = []
         while time.monotonic() < deadline:
-            tasks.append(asyncio.create_task(one_request(client, base, rng, stats, slow_ms)))
+            tasks.append(asyncio.create_task(one_request(client, base, catalog, rng, stats, slow_ms)))
             await asyncio.sleep(rng.expovariate(1.0 / interval))  # Poisson arrivals
         await asyncio.gather(*tasks)
     return stats
@@ -93,12 +93,13 @@ def print_summary(stats: Stats) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--checkout-url", default=os.getenv("CHECKOUT_URL", "http://localhost:8002"))
+    parser.add_argument("--catalog-url", default=os.getenv("CATALOG_URL", "http://localhost:8001"))
     parser.add_argument("--rps", type=float, default=5.0)
     parser.add_argument("--duration", type=float, default=30.0)
     parser.add_argument("--slow-ms", type=float, default=1000.0)
     parser.add_argument("--seed", type=int)
     args = parser.parse_args()
-    stats = asyncio.run(run(args.checkout_url, args.rps, args.duration, args.seed, args.slow_ms))
+    stats = asyncio.run(run(args.checkout_url, args.catalog_url, args.rps, args.duration, args.seed, args.slow_ms))
     print_summary(stats)
 
 
