@@ -1,0 +1,420 @@
+{
+ "data": [
+  {
+   "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+   "spans": [
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 120000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "c1",
+     "operationName": "price cart",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000002000,
+     "duration": 30000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "internal"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000035000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      },
+      {
+       "key": "http.url",
+       "type": "string",
+       "value": "http://catalog:8000/inventory/reserve"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000036000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/inventory/reserve"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "c6",
+     "operationName": "orders.placed publish",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000100000,
+     "duration": 10000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "producer"
+      },
+      {
+       "key": "messaging.system",
+       "type": "string",
+       "value": "kafka"
+      },
+      {
+       "key": "messaging.destination.name",
+       "type": "string",
+       "value": "orders.placed"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o0",
+     "operationName": "orders.placed process",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "c6"
+      }
+     ],
+     "startTime": 1760000000150000,
+     "duration": 2400000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "consumer"
+      },
+      {
+       "key": "messaging.system",
+       "type": "string",
+       "value": "kafka"
+      },
+      {
+       "key": "messaging.destination.name",
+       "type": "string",
+       "value": "orders.placed"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "otel.status_description",
+       "type": "string",
+       "value": "order dead-lettered: database is locked"
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o1",
+     "operationName": "persist order",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "o0"
+      }
+     ],
+     "startTime": 1760000000151000,
+     "duration": 700000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "internal"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "retry.attempt",
+       "type": "int64",
+       "value": 1
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o2",
+     "operationName": "sqlite write",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "o1"
+      }
+     ],
+     "startTime": 1760000000152000,
+     "duration": 690000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "db.system",
+       "type": "string",
+       "value": "sqlite"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "otel.status_description",
+       "type": "string",
+       "value": "database is locked"
+      },
+      {
+       "key": "db.statement",
+       "type": "string",
+       "value": "INSERT OR IGNORE INTO orders ..."
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o3",
+     "operationName": "persist order",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "o0"
+      }
+     ],
+     "startTime": 1760000001100000,
+     "duration": 700000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "internal"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "retry.attempt",
+       "type": "int64",
+       "value": 2
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o4",
+     "operationName": "sqlite write",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "o3"
+      }
+     ],
+     "startTime": 1760000001101000,
+     "duration": 690000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "db.system",
+       "type": "string",
+       "value": "sqlite"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "otel.status_description",
+       "type": "string",
+       "value": "database is locked"
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    },
+    {
+     "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+     "spanID": "o5",
+     "operationName": "orders.placed.dlq publish",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+       "spanID": "o0"
+      }
+     ],
+     "startTime": 1760000002500000,
+     "duration": 40000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "producer"
+      },
+      {
+       "key": "messaging.system",
+       "type": "string",
+       "value": "kafka"
+      },
+      {
+       "key": "messaging.destination.name",
+       "type": "string",
+       "value": "orders.placed.dlq"
+      }
+     ],
+     "logs": [],
+     "processID": "p3"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  }
+ ]
+}

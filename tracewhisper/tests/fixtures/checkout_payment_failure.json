@@ -1,0 +1,350 @@
+{
+ "data": [
+  {
+   "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+   "spans": [
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 320000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 502
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c1",
+     "operationName": "price cart",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000002000,
+     "duration": 30000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "internal"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c2",
+     "operationName": "GET",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c1"
+      }
+     ],
+     "startTime": 1760000000003000,
+     "duration": 25000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      },
+      {
+       "key": "http.url",
+       "type": "string",
+       "value": "http://catalog:8000/products/SKU-1001"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "k0",
+     "operationName": "GET /products/{sku}",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c2"
+      }
+     ],
+     "startTime": 1760000000004000,
+     "duration": 22000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/products/{sku}"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "k1",
+     "operationName": "sqlite query",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "k0"
+      }
+     ],
+     "startTime": 1760000000005000,
+     "duration": 3000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "db.system",
+       "type": "string",
+       "value": "sqlite"
+      },
+      {
+       "key": "db.statement",
+       "type": "string",
+       "value": "SELECT sku FROM products WHERE sku = ?"
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000040000,
+     "duration": 15000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      },
+      {
+       "key": "http.url",
+       "type": "string",
+       "value": "http://catalog:8000/inventory/reserve"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000041000,
+     "duration": 12000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/inventory/reserve"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000058000,
+     "duration": 252000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "key": "otel.status_code",
+       "type": "string",
+       "value": "ERROR"
+      },
+      {
+       "key": "otel.status_description",
+       "type": "string",
+       "value": "[fault:checkout.payment] payment gateway: upstream connect error"
+      }
+     ],
+     "logs": [
+      {
+       "timestamp": 1760000000060000,
+       "fields": [
+        {
+         "key": "event",
+         "type": "string",
+         "value": "exception"
+        },
+        {
+         "key": "exception.type",
+         "type": "string",
+         "value": "shopcommon.faults.InjectedFault"
+        },
+        {
+         "key": "exception.message",
+         "type": "string",
+         "value": "[fault:checkout.payment] payment gateway: upstream connect error"
+        },
+        {
+         "key": "exception.stacktrace",
+         "type": "string",
+         "value": "Traceback...\n  File app.py, line 120, in charge_payment\nInjectedFault: payment gateway: upstream connect error"
+        }
+       ]
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+     "spanID": "c5",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000311000,
+     "duration": 6000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      },
+      {
+       "key": "http.url",
+       "type": "string",
+       "value": "http://catalog:8000/inventory/release"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  }
+ ]
+}

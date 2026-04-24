@@ -1,0 +1,784 @@
+{
+ "data": [
+  {
+   "traceID": "00000000000000000000000000000000",
+   "spans": [
+    {
+     "traceID": "00000000000000000000000000000000",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 100000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000000",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000000",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 40000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000000",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000000",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000000",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000000",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  },
+  {
+   "traceID": "01010101010101010101010101010101",
+   "spans": [
+    {
+     "traceID": "01010101010101010101010101010101",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 101000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "01010101010101010101010101010101",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "01010101010101010101010101010101",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 41000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "01010101010101010101010101010101",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "01010101010101010101010101010101",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "01010101010101010101010101010101",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "01010101010101010101010101010101",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  },
+  {
+   "traceID": "02020202020202020202020202020202",
+   "spans": [
+    {
+     "traceID": "02020202020202020202020202020202",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 102000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "02020202020202020202020202020202",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "02020202020202020202020202020202",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 42000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "02020202020202020202020202020202",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "02020202020202020202020202020202",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "02020202020202020202020202020202",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "02020202020202020202020202020202",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  },
+  {
+   "traceID": "03030303030303030303030303030303",
+   "spans": [
+    {
+     "traceID": "03030303030303030303030303030303",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 103000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "03030303030303030303030303030303",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "03030303030303030303030303030303",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 43000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "03030303030303030303030303030303",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "03030303030303030303030303030303",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "03030303030303030303030303030303",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "03030303030303030303030303030303",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  },
+  {
+   "traceID": "04040404040404040404040404040404",
+   "spans": [
+    {
+     "traceID": "04040404040404040404040404040404",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 104000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "04040404040404040404040404040404",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "04040404040404040404040404040404",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 44000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "04040404040404040404040404040404",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "04040404040404040404040404040404",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "04040404040404040404040404040404",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "04040404040404040404040404040404",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  },
+  {
+   "traceID": "05050505050505050505050505050505",
+   "spans": [
+    {
+     "traceID": "05050505050505050505050505050505",
+     "spanID": "c0",
+     "operationName": "POST /checkout",
+     "references": [],
+     "startTime": 1760000000000000,
+     "duration": 105000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.route",
+       "type": "string",
+       "value": "/checkout"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 201
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "05050505050505050505050505050505",
+     "spanID": "c4",
+     "operationName": "payment-gateway charge",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "05050505050505050505050505050505",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000050000,
+     "duration": 45000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "peer.service",
+       "type": "string",
+       "value": "payment-gateway"
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "05050505050505050505050505050505",
+     "spanID": "c3",
+     "operationName": "POST",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "05050505050505050505050505050505",
+       "spanID": "c0"
+      }
+     ],
+     "startTime": 1760000000020000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "client"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p1"
+    },
+    {
+     "traceID": "05050505050505050505050505050505",
+     "spanID": "k2",
+     "operationName": "POST /inventory/reserve",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "05050505050505050505050505050505",
+       "spanID": "c3"
+      }
+     ],
+     "startTime": 1760000000021000,
+     "duration": 18000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "http.status_code",
+       "type": "int64",
+       "value": 200
+      }
+     ],
+     "logs": [],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "checkout",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "catalog",
+     "tags": []
+    },
+    "p3": {
+     "serviceName": "orders",
+     "tags": []
+    }
+   }
+  }
+ ]
+}
