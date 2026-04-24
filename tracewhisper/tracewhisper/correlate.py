@@ -105,18 +105,29 @@ class PathStep:
 
 
 def critical_path(trace: Trace, root: Span | None = None) -> list[PathStep]:
-    """Walk backwards from the end of each span through the last-finishing child.
+    """Classic backwards walk: from a span's end, take the last-finishing child,
+    jump to that child's start, and repeat for children that finished before it.
 
-    Children that overrun their parent (typical for async Kafka consumers) are
-    still followed, because their completion is what the user ultimately waits on
-    for the order to exist.
+    The first (latest-ending) child is always taken even if it overruns its
+    parent - typical for async Kafka consumers, whose completion is what the
+    user ultimately waits on for the order to exist. Returned in chronological,
+    depth-first order.
     """
     root = root or trace.root
     path: list[PathStep] = []
-    node: Span | None = root
-    while node is not None:
-        path.append(PathStep(node, self_time_us(node)))
-        node = max(node.children, key=lambda c: c.end_us, default=None)
+
+    def visit(span: Span) -> None:
+        path.append(PathStep(span, self_time_us(span)))
+        cursor = span.end_us
+        chosen: list[Span] = []
+        for child in sorted(span.children, key=lambda c: c.end_us, reverse=True):
+            if not chosen or child.end_us <= cursor:
+                chosen.append(child)
+                cursor = child.start_us
+        for child in reversed(chosen):
+            visit(child)
+
+    visit(root)
     return path
 
 
