@@ -46,13 +46,13 @@ Files:
 ### Phase 4 — MCP server + LLM root-cause agent
 Deliverables: FastMCP server with tools (`list_services`, `find_traces`, `analyze_trace`, `compare_to_baseline`, `service_metrics`, `service_dependencies`); Claude agent that connects to the MCP server over stdio, runs an investigation loop and emits a structured root-cause summary; CLI (`tracewhisper investigate|analyze|serve-mcp`).
 Files:
-- `tracewhisper/tracewhisper/{mcp_server,agent,prompts,cli}.py`
+- `tracewhisper/tracewhisper/{toolbox,mcp_server,agent,prompts,cli}.py`
 - `.env.example` (ANTHROPIC_API_KEY etc.)
 
 ### Phase 5 — Load, chaos scenarios and tests
 Deliverables: async load generator, chaos scenario runner (slow catalog DB, payment gateway errors, orders consumer failure), unit tests over recorded Jaeger fixtures, Makefile.
 Files:
-- `loadgen/{load,chaos}.py`
+- `loadgen/{load,chaos}.py` (stdlib + httpx, run from the analyzer venv)
 - `tracewhisper/tests/{conftest,test_models,test_correlate,test_report,test_agent_tools}.py`, `tracewhisper/tests/fixtures/*.json`
 - `Makefile`
 
